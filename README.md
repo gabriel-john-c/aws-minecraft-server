@@ -24,8 +24,42 @@ A quick run down for which tools we use and how it plays into the general archit
 ## Build Breakdown
 Half of the name is to craft, so lets get to building...
 
-For the initial set up, I went with an Amazon Linux isntane with t2.large type. I wanted the server to have at least 8 GB of RAM since it would be servicing at least 8 players on any given sitting
+### EC2
+
+#### Creating the Instance
+
+For the initial set up, we want to launch an instance. Select the 'Amazon Linux 2 AMI' type. Select the x86 variant. I went with an Amazon Linux instance with t2.large type. I wanted the server to have at least 8 GB of RAM since it would be servicing at least 8 players on any given sitting.
+For further configuration details, you can then select how big of a disk you want for the instance. I selected the default 8GB initially. 
+
+For the  security details, we want to ensure that the server can be accessed via SSH. We also want to make sure that Minecraft's default port is available.
+Ensure port 22 (TCP) allowed as well as 25565 (TCP). Source for either can be set to value: `0.0.0.0/0`. This basically allows anyone from any IP address to contact your server
+
+#### Elastic IP
+
+Now we have our instance set up within EC2. However, your IP address is allocated when the instance starts. This means that the IP address may hop each time it is cycled on/off.
+
+To bypass this, we utilize the 'Elastic IP' within EC2. You can simply allocate one to your AWS environment then assign it to the specific instance you want. 
+
+Note: AWS does charge for all public IPv4 Addresses. This includes any IP address associated to running an instance incuding the Elastic IP
+
+#### SSH Key
+
+In order to access and manage your instance, we want to make sure you can generate a key pair. Either upload your own key or generate one following the instructions popup
+
+### Linux Setup
+
+Amazon Linux 2 AMI is built on top of Fedora. In order to get the server running we must:
+- Download and install Java
+- Download your specific server .jar file
+- Create a specific directory for the server
+- Create a specific user that has the proper permissions for the directory
+- Create a service for the server that will automatically start/stop with the instance
+
+#### Installing Server files
+
 
 ## Sources
 - [How to Run a Minecraft Server on AWS For Less Than 3 USD a Month](https://sidoine.org/how-to-run-a-minecraft-server-on-aws-for-less-than-3-usd-a-month/)
 - [This](https://www.youtube.com/watch?v=_1xtKGspjEA&t=386s) YouTube guide by [@WonderfulWhite](https://www.youtube.com/@WonderfulWhite)
+- [AWS - Create a key pair for your Amazon EC2 instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html)
+- [AWS - Connect to your Linux instance with SSH](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connect-to-linux-instance.html)
