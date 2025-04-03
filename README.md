@@ -57,6 +57,47 @@ Amazon Linux 2 AMI is built on top of Fedora. In order to get the server running
 
 #### Installing Server files
 
+First lets install Java: `sudo yum install java`
+
+Now we want to create a new directory where we store our server files:
+
+```
+sudo su
+mkdir /opt/minecraft/
+mkdir /opt/minecraft/server/
+cd /opt/minecraft/server
+```
+
+Now lets get our server file into this directory. At this time I wanted to use a Fabric server, replace the URL with whichever server version you would like
+
+```
+wget https://meta.fabricmc.net/v2/versions/loader/1.21.4/0.16.12/1.0.1/server/jar
+```
+
+#### Dedicated User and permissions
+
+Create a dedicated user for running the server. Don't forget to grant permission to the directory we made earlier
+
+```
+sudo adduser minecraft
+sudo chown -R minecraft:minecraft /opt/minecraft/
+```
+
+#### System Service
+
+Now lets create our service that will automatically start/stop with the server. We can do this by making a new file: `/etc/systemd/system/minecraft.service`
+
+```
+touch /etc/systemd/system/minecraft.service
+nano /etc/systemd/system/minecraft.service
+```
+
+Once you're done, make sure to grant the correct permissions and restart the daemon
+
+```
+chmod 664 /etc/systemd/system/minecraft.service
+systemctl daemon-reload
+```
 
 ## Sources
 - [How to Run a Minecraft Server on AWS For Less Than 3 USD a Month](https://sidoine.org/how-to-run-a-minecraft-server-on-aws-for-less-than-3-usd-a-month/)
