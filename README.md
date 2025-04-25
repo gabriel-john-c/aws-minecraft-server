@@ -92,6 +92,32 @@ touch /etc/systemd/system/minecraft.service
 nano /etc/systemd/system/minecraft.service
 ```
 
+Now we want to load this minecraft.service file in order to properly start/stop the minecraft server itself
+
+```
+[Unit]
+Description=Minecraft server on startup
+Wants=network-online.target
+
+[Service]
+User=minecraft
+Group=minecraft
+WorkingDirectory=/opt/minecraft/server
+ExecStart=/usr/bin/screen -DmS mc /usr/bin/java -Xmx6G <server.jar> nogui
+
+ExecStop=/usr/bin/screen -p 0 -S mc -X eval 'stuff "save-all"\015'
+ExecStop=/usr/bin/screen -p 0 -S mc -X eval 'stuff "say SERVER SHUTTING DOWN IN 10 SECONDS..."\015'
+ExecStop=/usr/bin/sleep 5
+ExecStop=/usr/bin/screen -p 0 -S mc -X eval 'stuff "say SERVER SHUTTING DOWN IN 5 SECONDS..."\015'
+ExecStop=/usr/bin/sleep 5
+ExecStop=/usr/bin/screen -p 0 -S mc -X eval 'stuff "stop"\015'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+We want to use `screen` as the built-in dependancy here in order to manage the server once its running. Simply switch user to the minecraft user and use `screen -r` in order to reattach and use the cli as normal. Please view the sources section in orer to read more about the screen command
+
 Once you're done, make sure to grant the correct permissions and restart the daemon
 
 ```
@@ -104,3 +130,5 @@ systemctl daemon-reload
 - [This](https://www.youtube.com/watch?v=_1xtKGspjEA&t=386s) YouTube guide by [@WonderfulWhite](https://www.youtube.com/@WonderfulWhite)
 - [AWS - Create a key pair for your Amazon EC2 instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html)
 - [AWS - Connect to your Linux instance with SSH](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connect-to-linux-instance.html)
+- [Understanding Systemd Units and Unit Files](https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files)
+- [Understanding Screen in Linux](https://www.geeksforgeeks.org/screen-command-in-linux-with-examples/)
