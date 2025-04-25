@@ -125,6 +125,89 @@ chmod 664 /etc/systemd/system/minecraft.service
 systemctl daemon-reload
 ```
 
+### Lambda
+
+In order to ensure our EC2 instance starts and stops automatically, we want to leverage the use of AWS Lambda functions. We will create a start function that simply double checks to ensure that the EC2 instance is in a running state. We will also use a stop function that simply stops the EC2 instance once the run time has passed a set threshhold time value
+
+#### Start Function
+
+Head over to Lambda within AWS and click 'Create function'. Name the function as you wish > here I use `mc_start`. Select the runtime language as Python and x86_64 as the architecture
+Now import the following code:
+```
+import boto3
+
+region = '<region>'
+instances = ['<instance-id>']
+ec2 = boto3.client('ec2', region_name=region)
+ec2_resource = boto3.resource('ec2', region_name=region)
+
+def lambda_handler(event, context):
+    instance = ec2_resource.Instance('<instance-id>')
+    if instance.state['Name'] == 'running':
+        print('nothing to do, instance already running')
+    else:
+        ec2.start_instances(InstanceIds=instances)
+        print('started your instances: ' + str(instances))
+    
+```
+
+Provide your region and instance-id to reflect the EC2 instance we created earlier. Alternatively, under 'Configuration', you can also utilize environment variables to similarly provide these values.
+
+#### Stop Function
+
+Do the same as before when creating a function. This time name this function `mc_stop`. Same language and architecture as before
+
+```
+import boto3
+from datetime import datetime, timezone
+
+region = '<region>'
+instances = ['<instance-id>']
+ec2 = boto3.client('ec2', region_name=region)
+ec2_resource = boto3.resource('ec2', region_name=region)
+
+#grab current runtime
+current_time = datetime.now(timezone.utc)
+
+def lambda_handler(event, context):
+    instance = ec2_resource.Instance('<instance-id>')
+
+    if instance.state['Name'] == 'running':
+        #grab launch time for instance
+        launchtime_str = str(instance.launch_time)
+        launchtime = datetime.fromisoformat(launchtime_str)
+
+        #compare launch and current
+        time_diff = current_time - launchtime
+
+        #check difference, if greater than 6 hrs (conver to seconds), stop instance
+        if time_diff.total_seconds() > 6 * 3600:
+            print('stopping your instance...')
+            ec2.stop_instances(InstanceIds=instances)
+        else:
+            print('Runtime < 6 hr...')
+            print(str(time_diff))
+        print(launchtime_str)
+    else:
+        print('instance not running...')
+```
+
+Similarly, substitute your region/instance-id variables as you see fit. In particular, this script checks to see if our EC2 instance is running. If the runtime is greater than 6 hours, it will stop the instance. Update this value as you wish.
+In order utilize this, we will want to make sure this function is called in a timely manner, triggered by AWS EventBridge
+
+### EventBridge
+
+Create a new schedule > AWS EventBridge > Scheduler > Schedules > Create Schedules
+
+Name the schedule anything you want and provide the following cron expression:
+
+```
+*/20 * ? * * * 
+```
+
+This expression translates to any 20m interval, regardless of the hour, day of the Month, month, day of the week, or year.
+Simply select your stop function as the target for this schedule
+
 ## Sources
 - [How to Run a Minecraft Server on AWS For Less Than 3 USD a Month](https://sidoine.org/how-to-run-a-minecraft-server-on-aws-for-less-than-3-usd-a-month/)
 - [This](https://www.youtube.com/watch?v=_1xtKGspjEA&t=386s) YouTube guide by [@WonderfulWhite](https://www.youtube.com/@WonderfulWhite)
