@@ -15,7 +15,7 @@ A quick run down for which tools we use and how it plays into the general archit
     - Hosting 2 main functions to start and stop the server
   - Simple Email Service
     - For running a server once we get an email to a specified email recipient
-  - CloudWatch
+  - CloudWatch/EventBridge
     - For scheduling events that will trigger the stop function at a defined interval
  
 - Minecraft (Java)
@@ -208,6 +208,20 @@ Name the schedule anything you want and provide the following cron expression:
 This expression translates to any 20m interval, regardless of the hour, day of the Month, month, day of the week, or year.
 Simply select your stop function as the target for this schedule
 
+### Simple Email Service
+
+#### Domain setup
+AWS requires that you setup your domain to properly ues the Email Receiving function within AWS SES. Please follow their provided KB article as well as anyother documentation from your DNS provider.
+
+#### Receipt rule
+Once your domain is set for use within AWS SES, go to Simple Email Service > Configuration > Email receiving > Create rule set.
+
+Here your rule set should contain a single rule:
+- receipt condition: provide the email address you wish your users to send an email to: `mc-server@yourdomain.com`
+- Action: Invoke Lambda fucntion: select your start function
+
+Now anytime anyone sends an email to this address, your mc start function will be called. If your server instance is offline, the Lambda function will start it.
+
 ## Sources
 - [How to Run a Minecraft Server on AWS For Less Than 3 USD a Month](https://sidoine.org/how-to-run-a-minecraft-server-on-aws-for-less-than-3-usd-a-month/)
 - [This](https://www.youtube.com/watch?v=_1xtKGspjEA&t=386s) YouTube guide by [@WonderfulWhite](https://www.youtube.com/@WonderfulWhite)
@@ -215,3 +229,4 @@ Simply select your stop function as the target for this schedule
 - [AWS - Connect to your Linux instance with SSH](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connect-to-linux-instance.html)
 - [Understanding Systemd Units and Unit Files](https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files)
 - [Understanding Screen in Linux](https://www.geeksforgeeks.org/screen-command-in-linux-with-examples/)
+- [Setting up Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email.html)
